@@ -1,0 +1,306 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <base target="_top">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Générateur de RIB Professionnel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  </head>
+  <body class="bg-slate-100">
+    <div id="root"></div>
+    <script type="text/babel">
+      // From constants.ts
+      const BANKS = [ "AXA", "BANQUE BARCLAYS", "BANQUE CIC", "BANQUE DE SAVOIE", "BANQUE HERVET", "BANQUE POPULAIRE", "BNP PARIBAS", "BOURSORAMA", "CAISSE D'ÉPARGNE", "CNP ASSURANCES", "CREDIT AGRICOLE", "CRÉDIT COOPÉRATIF", "CRÉDIT DU NORD", "CRÉDIT LYONNAIS", "CREDIT MARITIME", "CRÉDIT MUNICIPAL", "CREDIT MUTUEL ARKEA", "CREDIT MUTUEL DE BRETAGNE", "CREDIT MUTUEL", "GROUPAMA", "HNBC", "MONABANQ", "NICKEL", "QONTO", "REVOLUT", "SOCIÉTÉ GÉNÉRALE", "SOCIETE MARSEILLAISE DE CREDIT", "TARNEAUD", "AUTRE" ];
+
+      // From bankLogos.ts
+      const BANK_LOGOS = { 'AXA': 'https://cdn.worldvectorlogo.com/logos/axa-banque.svg', 'BANQUE BARCLAYS': 'https://i.pinimg.com/1200x/1c/bf/05/1cbf058a456d865689e88e5a7218a1db.jpg', 'BANQUE CIC': 'https://upload.wikimedia.org/wikipedia/fr/archive/a/a7/20191211005939%21Cic_logo.svg', 'BANQUE DE SAVOIE': 'https://pickthebank.eu/_next/image/?url=http%3A%2F%2Fbalancer%2Fstorage%2Fpublic%2Fbanks-logo%2Fbank854FR.jpg&w=1200&q=75', 'BANQUE HERVET': 'https://cdn.worldvectorlogo.com/logos/banque-hervet.svg', 'BANQUE POPULAIRE': 'https://cdn.worldvectorlogo.com/logos/banque-populaire.svg', 'BNP PARIBAS': 'https://cdn.worldvectorlogo.com/logos/bnp-paribas-1.svg', 'BOURSORAMA': 'https://images.seeklogo.com/logo-png/27/1/boursorama-banque-logo-png_seeklogo-270592.png', 'CAISSE D\'ÉPARGNE': 'https://cdn.worldvectorlogo.com/logos/caisse-d-epargne-2.svg', 'CNP ASSURANCES': 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Logo_CNP_Assurances.svg/500px-Logo_CNP_Assurances.svg.png', 'CREDIT AGRICOLE': 'https://cdn.worldvectorlogo.com/logos/credit-agricole.svg', 'CRÉDIT COOPÉRATIF': 'https://upload.wikimedia.org/wikipedia/fr/thumb/2/2e/Logo_Cr%C3%A9dit_Coop%C3%A9ratif.svg/1200px-Logo_Cr%C3%A9dit_Coop%C3%A9ratif.svg.png', 'CRÉDIT DU NORD': 'https://cdn.worldvectorlogo.com/logos/credit-du-nord.svg', 'CRÉDIT LYONNAIS': 'https://upload.wikimedia.org/wikipedia/fr/thumb/0/0b/Lcl_logo.svg/2540px-Lcl_logo.svg.png', 'CREDIT MARITIME': 'https://upload.wikimedia.org/wikipedia/fr/3/39/Credit_maritime_logo.png', 'CRÉDIT MUNICIPAL': 'https://cdn.worldvectorlogo.com/logos/credit-municipal.svg', 'CREDIT MUTUEL ARKEA': 'https://thebanks.eu/img/logos/Arkea.png', 'CREDIT MUTUEL DE BRETAGNE': 'https://upload.wikimedia.org/wikipedia/fr/thumb/7/71/Logo_Cr%C3%A9dit_Mutuel_de_Bretagne_CMB.svg/2560px-Logo_Cr%C3%A9dit_Mutuel_de_Bretagne_CMB.svg.png', 'CREDIT MUTUEL': 'https://cdn.worldvectorlogo.com/logos/credit-mutuel.svg', 'GROUPAMA': 'https://cdn.worldvectorlogo.com/logos/groupama-2016.svg', 'HNBC': 'https://cdn.worldvectorlogo.com/logos/hsbc-3.svg', 'MONABANQ': 'https://cdn.worldvectorlogo.com/logos/logo-monabanq-gris.svg', 'NICKEL': 'https://upload.wikimedia.org/wikipedia/fr/thumb/2/2b/Nickel-logo.svg/640px-Nickel-logo.svg.png', 'QONTO': 'https://cdn.worldvectorlogo.com/logos/qonto-2016.svg', 'REVOLUT': 'https://cdn.worldvectorlogo.com/logos/revolut-1.svg', 'SOCIÉTÉ GÉNÉRALE': 'https://cdn.worldvectorlogo.com/logos/societe-generale.svg', 'SOCIETE MARSEILLAISE DE CREDIT': 'https://aides-territoires-prod-2.s3.fr-par.scw.cloud/aides-territoires-prod/backers/societe-marseillaise-de-credit_logo.png', 'TARNEAUD': 'https://www.trouver-sa-banque.com/sites/trouver-sa-banque.com/files/2022-12/tarneaud.png' };
+
+      // From components/icons.tsx
+      const UploadIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /> </svg> );
+      const BankIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2h8a2 2 0 002-2v-1a2 2 0 012-2h1.945M4 11V9a2 2 0 012-2h12a2 2 0 012 2v2M4 11v-1a2 2 0 012-2h12a2 2 0 012 2v1m-6 4h.01M12 16h.01M8 16h.01M12 12a2 2 0 100-4 2 2 0 000 4z" /> </svg> );
+      const DownloadIcon = ({ className }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor"> <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /> </svg> );
+
+      // From components/RibPdfTemplate.tsx
+      const RibPdfTemplate = ({ data, templateRef }) => {
+        const displayBankName = data.bank === 'AUTRE' ? data.customBankName : data.bank;
+        const rawIban = data.iban.replace(/\s/g, '');
+        const codeBanque = rawIban.substring(4, 9);
+        const codeGuichet = rawIban.substring(9, 14);
+        const numeroCompte = rawIban.substring(14, 25);
+        const cleRib = rawIban.substring(25, 27);
+        const addressParts = data.address.split('\n');
+        return (
+          <div ref={templateRef} id="pdf-template" className="absolute -left-[9999px] top-0 w-[842px] h-[595px] bg-white p-10 font-sans text-gray-900 flex flex-col justify-between">
+            <div>
+              <header className="flex justify-between items-start">
+                <div className="w-64"> {data.bankLogo && <img src={data.bankLogo} alt="Logo de la banque" className="max-w-full h-auto object-contain" />} </div>
+                <div className="text-right"> <h1 className="font-bold text-lg tracking-wider">RELEVÉ D'IDENTITÉ BANCAIRE</h1> </div>
+              </header>
+              <section className="mt-12 pt-2 border-t-2 border-orange-500">
+                <div className="grid grid-cols-2 gap-16">
+                  <div>
+                    <h2 className="font-bold text-orange-500 uppercase mb-2 text-sm tracking-wide">Banque</h2>
+                    <p className="font-semibold text-lg">{displayBankName || '...'}</p>
+                  </div>
+                  <div>
+                    <h2 className="font-bold text-orange-500 uppercase mb-2 text-sm tracking-wide">Titulaire</h2>
+                    <p className="font-semibold text-sm">{data.holderName || '...'}</p>
+                    {addressParts.map((line, index) => ( <p key={index} className="text-sm">{line}</p> ))}
+                  </div>
+                </div>
+              </section>
+              <section className="mt-10">
+                <div className="grid grid-cols-[1.5fr,1.5fr,3fr,1fr] border-2 border-black">
+                  <div className="p-2 border-r-2 border-black"> <p className="text-xs text-gray-700">Code banque</p> <p className="text-orange-500 font-mono font-bold text-base mt-1">{codeBanque}</p> </div>
+                  <div className="p-2 border-r-2 border-black"> <p className="text-xs text-gray-700">Code guichet</p> <p className="text-orange-500 font-mono font-bold text-base mt-1">{codeGuichet}</p> </div>
+                  <div className="p-2 border-r-2 border-black"> <p className="text-xs text-gray-700">N° de compte</p> <p className="text-orange-500 font-mono font-bold text-base mt-1">{numeroCompte}</p> </div>
+                  <div className="p-2"> <p className="text-xs text-gray-700">Clé</p> <p className="text-orange-500 font-mono font-bold text-base mt-1">{cleRib}</p> </div>
+                </div>
+              </section>
+              <section className="mt-1">
+                <div className="grid grid-cols-3 border-2 border-black">
+                  <div className="col-span-2 p-2 border-r-2 border-black"> <p className="text-xs text-gray-700">IBAN (International bank account number)</p> <p className="font-mono font-semibold text-base mt-1 break-all">{data.iban}</p> </div>
+                  <div className="p-2"> <p className="text-xs text-gray-700">BIC</p> <p className="font-mono font-semibold text-base mt-1">{data.bic}</p> </div>
+                </div>
+              </section>
+            </div>
+            <footer className="text-center">
+              <p className="text-[8px] text-gray-500 mb-1"> Ce relevé est destiné à être remis, sur leur demande, à vos créanciers ou débiteurs appelés à faire inscrire des opérations à votre compte (virement, paiement de quittance, etc.). </p>
+              <p className="text-[8px] text-gray-500"> Son utilisation vous garantit le bon enregistrement des opérations en cause et vous évite ainsi des réclamations pour erreurs ou retards d'imputation. </p>
+            </footer>
+          </div>
+        );
+      };
+      
+      // From components/RibPreview.tsx
+      const RibPreview = ({ data }) => {
+        const displayBankName = data.bank === 'AUTRE' ? data.customBankName : data.bank;
+        const rawIban = data.iban.replace(/\s/g, '');
+        const codeBanque = rawIban.substring(4, 9) || '00000';
+        const codeGuichet = rawIban.substring(9, 14) || '00000';
+        const numeroCompte = rawIban.substring(14, 25) || '00000000000';
+        const cleRib = rawIban.substring(25, 27) || '00';
+        const addressParts = data.address.split('\n');
+        return (
+          <div className="w-full bg-white p-6 font-sans text-gray-900 flex flex-col rounded-xl shadow-lg border border-slate-200 aspect-[1.41] justify-between" aria-live="polite" aria-atomic="true">
+            <div>
+              <header className="flex justify-between items-start">
+                <div className="w-32"> {data.bankLogo && <img src={data.bankLogo} alt="Aperçu du logo de la banque" className="max-w-full h-auto object-contain" />} </div>
+                <div className="text-right"> <h1 className="font-bold text-base tracking-wider">RELEVÉ D'IDENTITÉ BANCAIRE</h1> </div>
+              </header>
+              <section className="mt-8 pt-2 border-t-2 border-orange-500">
+                <div className="grid grid-cols-2 gap-8">
+                  <div>
+                    <h2 className="font-bold text-orange-500 uppercase mb-2 text-xs tracking-wide">Banque</h2>
+                    <p className="font-semibold text-sm break-words">{displayBankName || '...'}</p>
+                  </div>
+                  <div>
+                    <h2 className="font-bold text-orange-500 uppercase mb-2 text-xs tracking-wide">Titulaire</h2>
+                    <p className="font-semibold text-xs break-words">{data.holderName || '...'}</p>
+                    {addressParts.map((line, index) => ( <p key={index} className="text-xs break-words">{line || (index === 0 && '...')}</p> ))}
+                  </div>
+                </div>
+              </section>
+              <section className="mt-6">
+                <div className="grid grid-cols-[1.5fr,1.5fr,3fr,1fr] border-2 border-black">
+                  <div className="p-2 border-r-2 border-black"> <p className="text-[10px] text-gray-700">Code banque</p> <p className="text-orange-500 font-mono font-bold text-sm mt-1">{codeBanque}</p> </div>
+                  <div className="p-2 border-r-2 border-black"> <p className="text-[10px] text-gray-700">Code guichet</p> <p className="text-orange-500 font-mono font-bold text-sm mt-1">{codeGuichet}</p> </div>
+                  <div className="p-2 border-r-2 border-black"> <p className="text-[10px] text-gray-700">N° de compte</p> <p className="text-orange-500 font-mono font-bold text-sm mt-1 break-all">{numeroCompte}</p> </div>
+                  <div className="p-2"> <p className="text-[10px] text-gray-700">Clé</p> <p className="text-orange-500 font-mono font-bold text-sm mt-1">{cleRib}</p> </div>
+                </div>
+              </section>
+              <section className="mt-1">
+                <div className="grid grid-cols-3 border-2 border-black">
+                  <div className="col-span-2 p-2 border-r-2 border-black"> <p className="text-[10px] text-gray-700">IBAN (International bank account number)</p> <p className="font-mono font-semibold text-sm mt-1 break-all">{data.iban || '...'}</p> </div>
+                  <div className="p-2"> <p className="text-[10px] text-gray-700">BIC</p> <p className="font-mono font-semibold text-sm mt-1">{data.bic || '...'}</p> </div>
+                </div>
+              </section>
+            </div>
+            <footer className="text-center mt-4">
+              <p className="text-[7px] text-gray-500 leading-tight mb-1"> Ce relevé est destiné à être remis, sur leur demande, à vos créanciers ou débiteurs appelés à faire inscrire des opérations à votre compte (virement, paiement de quittance, etc.). </p>
+              <p className="text-[7px] text-gray-500 leading-tight"> Son utilisation vous garantit le bon enregistrement des opérations en cause et vous évite ainsi des réclamations pour erreurs ou retards d'imputation. </p>
+            </footer>
+          </div>
+        );
+      };
+
+      // From App.tsx
+      const App = () => {
+        const { useState, useRef, useCallback } = React;
+
+        const initialFormData = { bank: '', customBankName: '', bankLogo: null, iban: '', bic: '', holderName: '', address: '' };
+        const [formData, setFormData] = useState(initialFormData);
+        const [isLoading, setIsLoading] = useState(false);
+        const [logoFileName, setLogoFileName] = useState(null);
+        const [pdfError, setPdfError] = useState(null);
+        const pdfTemplateRef = useRef(null);
+
+        const handleInputChange = (e) => {
+          if (pdfError) setPdfError(null);
+          const { name, value } = e.target;
+          if (name === 'bank') {
+            const bankName = value;
+            const logoUrl = BANK_LOGOS[bankName] || null;
+            setFormData(prev => ({ ...prev, bank: bankName, bankLogo: logoUrl, customBankName: bankName === 'AUTRE' ? prev.customBankName : '' }));
+            if (bankName !== 'AUTRE') {
+              setLogoFileName(null);
+            }
+          } else {
+            setFormData(prev => ({ ...prev, [name]: value }));
+          }
+        };
+
+        const handleIbanChange = (e) => {
+          if (pdfError) setPdfError(null);
+          const value = e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+          const formattedValue = value.slice(0, 27).match(/.{1,4}/g)?.join(' ') || '';
+          setFormData(prev => ({...prev, iban: formattedValue}));
+        };
+
+        const handleBicChange = (e) => {
+          if (pdfError) setPdfError(null);
+          const value = e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+          setFormData(prev => ({...prev, bic: value.slice(0, 11)}));
+        };
+
+        const handleLogoChange = (e) => {
+          if (pdfError) setPdfError(null);
+          const file = e.target.files?.[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              setFormData(prev => ({ ...prev, bankLogo: reader.result }));
+              setLogoFileName(file.name);
+            };
+            reader.readAsDataURL(file);
+          }
+        };
+
+        const isFormValid = formData.bank && formData.iban && formData.bic && formData.holderName && (formData.bank !== 'AUTRE' || formData.customBankName);
+
+        const generatePdf = useCallback(async () => {
+          if (!pdfTemplateRef.current || !isFormValid) return;
+          setIsLoading(true);
+          setPdfError(null);
+          try {
+            const { jsPDF } = window.jspdf;
+            const canvas = await html2canvas(pdfTemplateRef.current, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+            const imgData = canvas.toDataURL('image/jpeg', 0.9);
+            const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: 'a4' });
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = pdf.internal.pageSize.getHeight();
+            pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+            pdf.save('RIB.pdf');
+            setFormData(initialFormData);
+            setLogoFileName(null);
+          } catch (error) {
+            console.error("Erreur lors de la génération du PDF:", error);
+            const errorMessage = error instanceof Error ? error.message : "Une erreur inconnue est survenue.";
+            setPdfError(`La génération du PDF a échoué. ${errorMessage}`);
+          } finally {
+            setIsLoading(false);
+          }
+        }, [isFormValid]);
+
+        return (
+          <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8 font-sans">
+            <div className="w-full max-w-7xl mx-auto">
+              <header className="text-center mb-8">
+                <h1 className="text-4xl font-bold text-slate-800">Générateur de RIB</h1>
+                <p className="text-slate-600 mt-2">Créez un Relevé d'Identité Bancaire professionnel au format PDF.</p>
+              </header>
+              <main className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div className="bg-white rounded-xl shadow-2xl shadow-slate-200">
+                  <div className="p-8 md:p-12">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                      <div className="md:col-span-2">
+                        <label htmlFor="bank" className="block text-sm font-medium text-slate-700 mb-1">Banque</label>
+                        <select id="bank" name="bank" value={formData.bank} onChange={handleInputChange} className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                          <option value="" disabled>Veuillez sélectionner la banque</option>
+                          {BANKS.map(b => <option key={b} value={b}>{b}</option>)}
+                        </select>
+                      </div>
+                      {formData.bank === 'AUTRE' && (
+                        <React.Fragment>
+                          <div className="md:col-span-1">
+                            <label htmlFor="customBankName" className="block text-sm font-medium text-slate-700 mb-1">Nom de la banque</label>
+                            <input type="text" id="customBankName" name="customBankName" value={formData.customBankName} onChange={handleInputChange} className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Ex: Ma Banque Personnelle" />
+                          </div>
+                          <div className="md:col-span-1">
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Logo de la banque (optionnel)</label>
+                            <label htmlFor="bankLogo" className="relative flex items-center justify-center w-full h-10 px-3 py-2 border border-slate-300 rounded-md shadow-sm cursor-pointer hover:bg-slate-50 transition">
+                              <UploadIcon className="w-5 h-5 text-slate-500 mr-2" />
+                              <span className="text-sm text-slate-600 truncate">{logoFileName || 'Choisir un fichier...'}</span>
+                              <input id="bankLogo" name="bankLogo" type="file" onChange={handleLogoChange} className="sr-only" accept="image/png, image/jpeg, image/svg+xml" />
+                            </label>
+                          </div>
+                        </React.Fragment>
+                      )}
+                      <div className="md:col-span-2">
+                        <label htmlFor="iban" className="block text-sm font-medium text-slate-700 mb-1">IBAN</label>
+                        <input type="text" id="iban" name="iban" value={formData.iban} onChange={handleIbanChange} className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition font-mono" placeholder="FR76 3000 4000 0500 0012 3456 789" />
+                      </div>
+                      <div className="md:col-span-1">
+                        <label htmlFor="bic" className="block text-sm font-medium text-slate-700 mb-1">BIC</label>
+                        <input type="text" id="bic" name="bic" value={formData.bic} onChange={handleBicChange} className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition font-mono" placeholder="BNPAFRPPXXX" />
+                      </div>
+                      <div className="md:col-span-1">
+                        <label htmlFor="holderName" className="block text-sm font-medium text-slate-700 mb-1">Nom & Prénom du titulaire</label>
+                        <input type="text" id="holderName" name="holderName" value={formData.holderName} onChange={handleInputChange} className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Ex: Jean Dupont" />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label htmlFor="address" className="block text-sm font-medium text-slate-700 mb-1">Adresse</label>
+                        <textarea id="address" name="address" value={formData.address} onChange={handleInputChange} rows={3} className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Ex: 123 Rue de la République, 75001 Paris" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-slate-50 px-8 py-6 rounded-b-xl border-t border-slate-200">
+                    <button onClick={generatePdf} disabled={!isFormValid || isLoading} className="w-full flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-slate-400 disabled:cursor-not-allowed transition-colors duration-200">
+                      {isLoading ? (
+                        <React.Fragment>
+                          <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Génération en cours...
+                        </React.Fragment>
+                      ) : (
+                        <React.Fragment>
+                          <DownloadIcon className="w-5 h-5 mr-2" />
+                          Générer le RIB en PDF
+                        </React.Fragment>
+                      )}
+                    </button>
+                    {!isFormValid && <p className="text-xs text-center text-slate-500 mt-3">Veuillez remplir tous les champs obligatoires pour générer le PDF.</p>}
+                    {pdfError && <p className="text-xs text-center text-red-600 mt-3">{pdfError}</p>}
+                  </div>
+                </div>
+                <div className="lg:sticky lg:top-8">
+                  <h2 className="text-2xl font-bold text-slate-800 mb-4 text-center lg:text-left">Aperçu en direct</h2>
+                  <RibPreview data={formData} />
+                </div>
+              </main>
+            </div>
+            <RibPdfTemplate data={formData} templateRef={pdfTemplateRef} />
+          </div>
+        );
+      };
+
+      // From index.tsx
+      const rootElement = document.getElementById('root');
+      const root = ReactDOM.createRoot(rootElement);
+      root.render(
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>
+      );
+    </script>
+  </body>
+</html>

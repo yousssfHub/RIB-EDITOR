@@ -1,0 +1,5 @@
+{
+  "name": "Générateur de RIB Professionnel",
+  "description": "Une application web pour créer et éditer des Relevés d'Identité Bancaire (RIB) français et les exporter en format PDF professionnel.",
+  "requestFramePermissions": []
+}
